@@ -1,0 +1,23 @@
+{
+  "name": "ig-unlike",
+  "version": "1.0.0",
+  "description": "Mass unlike automation for Instagram using Playwright",
+  "main": "unlike.js",
+  "scripts": {
+    "start": "node unlike.js",
+    "session": "node save_session.js"
+  },
+  "keywords": [
+    "instagram",
+    "playwright",
+    "automation",
+    "privacy",
+    "cleanup"
+  ],
+  "author": "Ivancho",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.60.0"
+  }
+}

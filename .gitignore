@@ -1,0 +1,6 @@
+node_modules/
+session.json
+progress.json
+liked_posts.json
+liked_comments.json
+.DS_Store
