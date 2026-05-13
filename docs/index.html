@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ig-unlike — mass unlike automation</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #060608;
+  --surface: #0e0e12;
+  --surface2: #13131a;
+  --border: #1e1e2e;
+  --border2: #2a2a3e;
+  --green: #00ff88;
+  --green-dim: rgba(0,255,136,0.07);
+  --purple: #a855f7;
+  --blue: #38bdf8;
+  --yellow: #fbbf24;
+  --text: #e2e8f0;
+  --muted: #4a5568;
+  --muted2: #6b7280;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+  pointer-events: none;
+  z-index: 100;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: linear-gradient(rgba(0,255,136,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.022) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+
+/* NAV */
+nav { padding: 1.25rem 0; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.logo { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--green); display: flex; align-items: center; gap: 8px; }
+.logo-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.nav-pills { display: flex; gap: 6px; }
+.pill { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 10px; border-radius: 2px; border: 1px solid var(--border2); color: var(--muted2); background: var(--surface); }
+.pill.g { border-color: rgba(0,255,136,0.3); color: var(--green); background: var(--green-dim); }
+
+/* HERO */
+.hero { padding: 5rem 0 3rem; }
+.term-header { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 14px; margin-bottom: 2rem; }
+.dots { display: flex; gap: 5px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.r { background: #f87171; } .dot.y { background: #fbbf24; } .dot.g { background: #4ade80; }
+.eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--green); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+h1 { font-size: clamp(2.4rem, 5.5vw, 3.8rem); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 1.25rem; }
+h1 .acc { color: var(--green); }
+h1 .dim { color: var(--muted2); font-weight: 300; }
+.hero-desc { font-size: 1rem; color: var(--muted2); line-height: 1.75; max-width: 540px; font-weight: 400; margin-bottom: 2.5rem; }
+.hero-cmd { display: inline-flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border2); border-left: 3px solid var(--green); padding: 0.75rem 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 13px; border-radius: 2px; }
+.prompt { color: var(--green); }
+
+/* STATS */
+.stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 3rem 0; }
+.stat-item { padding: 1.25rem; border-right: 1px solid var(--border); position: relative; transition: background 0.2s; }
+.stat-item:last-child { border-right: none; }
+.stat-item:hover { background: var(--surface); }
+.stat-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--green); opacity: 0; transition: opacity 0.3s; }
+.stat-item:hover::before { opacity: 1; }
+.stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; color: var(--green); line-height: 1; margin-bottom: 4px; }
+.stat-key { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* SECTIONS */
+section { padding: 4rem 0; border-top: 1px solid var(--border); }
+.sec-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--green); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 10px; }
+.sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+.sec-desc { color: var(--muted2); font-size: 0.9rem; line-height: 1.7; margin-bottom: 2rem; font-weight: 400; }
+.ic { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--green); background: var(--green-dim); padding: 1px 6px; border-radius: 2px; }
+
+/* CODE */
+.file-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1.25rem; }
+.file-header { background: var(--surface2); padding: 9px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.file-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); }
+.file-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--purple); background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.2); padding: 2px 8px; border-radius: 2px; }
+pre { padding: 1.25rem 1.5rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.75; color: #94a3b8; tab-size: 2; }
+.kw { color: #c084fc; } .str { color: #86efac; } .cm { color: #2d3748; font-style: italic; }
+.fn { color: #67e8f9; } .num { color: #fb923c; } .cn { color: #fbbf24; }
+
+/* STEPS */
+.step-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem; }
+.step { display: grid; grid-template-columns: 56px 1fr; background: var(--surface); transition: background 0.2s; }
+.step:hover { background: var(--surface2); }
+.step-n { display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--green); border-right: 1px solid var(--border); padding: 1.25rem 0; }
+.step-body { padding: 1.1rem 1.25rem; }
+.step-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 3px; }
+.step-desc { font-size: 0.8rem; color: var(--muted2); line-height: 1.6; font-weight: 400; }
+
+/* FEATURES */
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.feat { background: var(--surface); padding: 1.25rem; transition: background 0.2s; }
+.feat:hover { background: var(--surface2); }
+.feat-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--green); background: var(--green-dim); border: 1px solid rgba(0,255,136,0.15); padding: 2px 8px; border-radius: 2px; display: inline-block; margin-bottom: 0.75rem; letter-spacing: 0.1em; }
+.feat-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 4px; }
+.feat-desc { font-size: 0.775rem; color: var(--muted2); line-height: 1.6; font-weight: 400; }
+
+/* CMD */
+.cmd-block { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border2); border-left: 3px solid var(--green); padding: 0.8rem 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 13px; border-radius: 2px; margin-bottom: 8px; }
+.cmd-block .p { color: var(--green); flex-shrink: 0; }
+.cmd-block .c { color: var(--text); }
+.cmd-block .a { color: var(--purple); }
+.cmd-block .cm2 { color: var(--muted); font-size: 11px; margin-left: auto; }
+
+/* WARNING */
+.warning { background: rgba(251,191,36,0.05); border: 1px solid rgba(251,191,36,0.2); border-left: 3px solid var(--yellow); border-radius: 2px; padding: 1rem 1.25rem; margin-top: 1.5rem; font-size: 0.8rem; color: var(--muted2); line-height: 1.6; }
+.warning strong { color: var(--yellow); font-weight: 600; }
+
+/* FOOTER */
+footer { border-top: 1px solid var(--border); padding: 2rem 0; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+.footer-l { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.footer-l span { color: var(--green); }
+.footer-r { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+
+/* ANIMS */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.hero > * { animation: fadeUp 0.5s ease forwards; opacity: 0; }
+.term-header { animation-delay: 0.05s; } .eyebrow { animation-delay: 0.1s; }
+h1 { animation-delay: 0.18s; } .hero-desc { animation-delay: 0.26s; } .hero-cmd { animation-delay: 0.34s; }
+
+@media (max-width: 600px) {
+  .stats-bar { grid-template-columns: 1fr 1fr; }
+  .features { grid-template-columns: 1fr; }
+  h1 { font-size: 2.2rem; }
+  .nav-pills { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="logo"><div class="logo-dot"></div>ig-unlike</div>
+    <div class="nav-pills">
+      <span class="pill g">v1.0.0</span>
+      <span class="pill">Node.js</span>
+      <span class="pill">Playwright</span>
+    </div>
+  </nav>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="term-header">
+      <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+      bash — ig_unlike — 80×24
+    </div>
+    <div class="eyebrow">// privacy automation</div>
+    <h1>Borrá todos tus<br><span class="acc">likes de Instagram</span><br><span class="dim">en piloto automático</span></h1>
+    <p class="hero-desc">Script incremental con Playwright que elimina likes de a lotes con pausas aleatorias anti-detección. Retoma desde donde quedó. Sin APIs privadas, sin tokens.</p>
+    <div class="hero-cmd">
+      <span class="prompt">❯</span>
+      <span>node unlike.js <span style="color:var(--purple)">500</span></span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-val">8–20s</div><div class="stat-key">delay entre likes</div></div>
+    <div class="stat-item"><div class="stat-val">3x</div><div class="stat-key">reintentos auto</div></div>
+    <div class="stat-item"><div class="stat-val">∞</div><div class="stat-key">likes soportados</div></div>
+    <div class="stat-item"><div class="stat-val">0</div><div class="stat-key">APIs privadas</div></div>
+  </div>
+</div>
+
+<!-- 00 SETUP -->
+<div class="wrap"><section>
+  <div class="sec-label">00 — setup</div>
+  <h2>Instalación</h2>
+  <p class="sec-desc">Una sola vez. Requiere Node.js instalado.</p>
+  <div class="file-block">
+    <div class="file-header"><span class="file-name">terminal</span><span class="file-lang">bash</span></div>
+    <pre><span class="cm"># crear carpeta del proyecto</span>
+mkdir ig_unlike && cd ig_unlike
+
+<span class="cm"># instalar dependencias</span>
+npm init -y
+npm install playwright
+npx playwright install chromium</pre>
+  </div>
+  <div class="file-block">
+    <div class="file-header"><span class="file-name">estructura</span><span class="file-lang">fs</span></div>
+    <pre>ig_unlike/
+├── liked_posts.json    <span class="cm"># export de Instagram (JSON)</span>
+├── stats.py            <span class="cm"># explorar antes de borrar</span>
+├── save_session.js     <span class="cm"># guardar login — 1 sola vez</span>
+├── unlike.js           <span class="cm"># script principal</span>
+├── session.json        <span class="cm"># generado automáticamente</span>
+└── progress.json       <span class="cm"># checkpoint incremental</span></pre>
+  </div>
+</section></div>
+
+<!-- 01 EXPORT -->
+<div class="wrap"><section>
+  <div class="sec-label">01 — export</div>
+  <h2>Exportá tus datos</h2>
+  <p class="sec-desc">Instagram permite descargar todo tu historial. Necesitás el archivo <span class="ic">liked_posts.json</span> en formato JSON.</p>
+  <div class="step-list">
+    <div class="step"><div class="step-n">01</div><div class="step-body"><div class="step-title">Ir a Accounts Center</div><div class="step-desc">Perfil → Menú (☰) → Accounts Center → Tu información y permisos → Descargar tu información</div></div></div>
+    <div class="step"><div class="step-n">02</div><div class="step-body"><div class="step-title">Elegir formato JSON</div><div class="step-desc">Crítico: seleccionar JSON, no HTML. El HTML no es parseable por el script.</div></div></div>
+    <div class="step"><div class="step-n">03</div><div class="step-body"><div class="step-title">Esperar el email</div><div class="step-desc">Instagram procesa el export en minutos o hasta 48hs. Descargás un ZIP con todos los JSONs.</div></div></div>
+    <div class="step"><div class="step-n">04</div><div class="step-body"><div class="step-title">Extraer liked_posts.json</div><div class="step-desc">Descomprimí el ZIP y buscá el archivo en <span class="ic">your_instagram_activity/likes/</span></div></div></div>
+  </div>
+</section></div>
+
+<!-- 02 STATS -->
+<div class="wrap"><section>
+  <div class="sec-label">02 — explorar</div>
+  <h2>stats.py</h2>
+  <p class="sec-desc">Antes de borrar nada, explorá el JSON. Te dice cuántos likes tenés, distribución por año, top usuarios y tipo de contenido.</p>
+  <div class="file-block">
+    <div class="file-header"><span class="file-name">stats.py</span><span class="file-lang">python</span></div>
+    <pre><span class="kw">import</span> json
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> collections <span class="kw">import</span> Counter
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">'liked_posts.json'</span>, <span class="str">'r'</span>, encoding=<span class="str">'utf-8'</span>) <span class="kw">as</span> f:
+    likes = json.<span class="fn">load</span>(f)
+
+urls, usernames, years = [], [], []
+
+<span class="kw">for</span> item <span class="kw">in</span> likes:
+    <span class="kw">for</span> lv <span class="kw">in</span> item.<span class="fn">get</span>(<span class="str">'label_values'</span>, []):
+        <span class="kw">if</span> lv.<span class="fn">get</span>(<span class="str">'label'</span>) == <span class="str">'URL'</span> <span class="kw">and</span> lv.<span class="fn">get</span>(<span class="str">'href'</span>):
+            urls.<span class="fn">append</span>(lv[<span class="str">'href'</span>])
+    <span class="kw">for</span> lv <span class="kw">in</span> item.<span class="fn">get</span>(<span class="str">'label_values'</span>, []):
+        <span class="kw">if</span> <span class="fn">isinstance</span>(lv.<span class="fn">get</span>(<span class="str">'dict'</span>), list):
+            <span class="kw">for</span> d <span class="kw">in</span> lv[<span class="str">'dict'</span>]:
+                <span class="kw">for</span> inner <span class="kw">in</span> d.<span class="fn">get</span>(<span class="str">'dict'</span>, []):
+                    <span class="kw">if</span> inner.<span class="fn">get</span>(<span class="str">'label'</span>) == <span class="str">'Username'</span> <span class="kw">and</span> inner.<span class="fn">get</span>(<span class="str">'value'</span>):
+                        usernames.<span class="fn">append</span>(inner[<span class="str">'value'</span>])
+    ts = item.<span class="fn">get</span>(<span class="str">'timestamp'</span>)
+    <span class="kw">if</span> ts:
+        years.<span class="fn">append</span>(datetime.<span class="fn">fromtimestamp</span>(ts).year)
+
+<span class="fn">print</span>(<span class="str">f"\n{'='*40}"</span>)
+<span class="fn">print</span>(<span class="str">f"  Total likes: {len(urls)}"</span>)
+<span class="fn">print</span>(<span class="str">f"{'='*40}"</span>)
+<span class="fn">print</span>(<span class="str">"\nPor año:"</span>)
+<span class="kw">for</span> year, count <span class="kw">in</span> <span class="fn">sorted</span>(Counter(years).<span class="fn">items</span>()):
+    <span class="fn">print</span>(<span class="str">f"  {year}: {count}"</span>)
+<span class="fn">print</span>(<span class="str">"\nTop 10 usuarios:"</span>)
+<span class="kw">for</span> user, count <span class="kw">in</span> Counter(usernames).<span class="fn">most_common</span>(<span class="num">10</span>):
+    <span class="fn">print</span>(<span class="str">f"  @{user}: {count}"</span>)
+<span class="fn">print</span>(<span class="str">"\nTipos:"</span>)
+reels = <span class="fn">sum</span>(<span class="num">1</span> <span class="kw">for</span> u <span class="kw">in</span> urls <span class="kw">if</span> <span class="str">'/reel/'</span> <span class="kw">in</span> u)
+posts = <span class="fn">sum</span>(<span class="num">1</span> <span class="kw">for</span> u <span class="kw">in</span> urls <span class="kw">if</span> <span class="str">'/p/'</span> <span class="kw">in</span> u)
+<span class="fn">print</span>(<span class="str">f"  Reels: {reels} | Posts: {posts} | Otros: {len(urls)-reels-posts}"</span>)</pre>
+  </div>
+  <div class="cmd-block"><span class="p">❯</span><span class="c">python stats.py</span></div>
+</section></div>
+
+<!-- 03 SESSION -->
+<div class="wrap"><section>
+  <div class="sec-label">03 — sesión</div>
+  <h2>save_session.js</h2>
+  <p class="sec-desc">Guardá tu login una sola vez. El script principal reutiliza las cookies automáticamente sin pedirte contraseña cada vez.</p>
+  <div class="file-block">
+    <div class="file-header"><span class="file-name">save_session.js</span><span class="file-lang">javascript</span></div>
+    <pre><span class="kw">const</span> { chromium } = <span class="fn">require</span>(<span class="str">'playwright'</span>);
+
+(<span class="kw">async</span> () => {
+  <span class="kw">const</span> browser = <span class="kw">await</span> chromium.<span class="fn">launch</span>({ headless: <span class="kw">false</span> });
+  <span class="kw">const</span> context = <span class="kw">await</span> browser.<span class="fn">newContext</span>();
+  <span class="kw">const</span> page    = <span class="kw">await</span> context.<span class="fn">newPage</span>();
+
+  <span class="kw">await</span> page.<span class="fn">goto</span>(<span class="str">'https://www.instagram.com/'</span>);
+  console.<span class="fn">log</span>(<span class="str">'Hacé login y presioná Enter...'</span>);
+  <span class="kw">await new</span> <span class="fn">Promise</span>(r => process.stdin.<span class="fn">once</span>(<span class="str">'data'</span>, r));
+
+  <span class="kw">await</span> context.<span class="fn">storageState</span>({ path: <span class="str">'session.json'</span> });
+  console.<span class="fn">log</span>(<span class="str">'Sesión guardada en session.json ✓'</span>);
+  <span class="kw">await</span> browser.<span class="fn">close</span>();
+})();</pre>
+  </div>
+  <div class="cmd-block"><span class="p">❯</span><span class="c">node save_session.js</span><span class="cm2">// solo una vez</span></div>
+</section></div>
+
+<!-- 04 UNLIKE -->
+<div class="wrap"><section>
+  <div class="sec-label">04 — unlike</div>
+  <h2>unlike.js</h2>
+  <p class="sec-desc">El script principal. Pasale cuántos likes borrar en esta sesión. Retoma automáticamente desde el último checkpoint guardado en <span class="ic">progress.json</span>.</p>
+  <div class="file-block">
+    <div class="file-header"><span class="file-name">unlike.js</span><span class="file-lang">javascript</span></div>
+    <pre><span class="kw">const</span> { chromium } = <span class="fn">require</span>(<span class="str">'playwright'</span>);
+<span class="kw">const</span> fs = <span class="fn">require</span>(<span class="str">'fs'</span>);
+
+<span class="kw">const</span> <span class="cn">PROGRESS_FILE</span> = <span class="str">'progress.json'</span>;
+<span class="kw">const</span> <span class="cn">LIKES_FILE</span>    = <span class="str">'liked_posts.json'</span>;
+<span class="kw">const</span> <span class="cn">SESSION_FILE</span>  = <span class="str">'session.json'</span>;
+<span class="kw">const</span> <span class="cn">LIMIT</span>         = <span class="fn">parseInt</span>(process.argv[<span class="num">2</span>]) || <span class="num">10</span>;
+<span class="kw">const</span> <span class="cn">MIN_WAIT</span>      = <span class="num">8000</span>;
+<span class="kw">const</span> <span class="cn">MAX_WAIT</span>      = <span class="num">20000</span>;
+
+<span class="kw">function</span> <span class="fn">sleep</span>(ms) { <span class="kw">return new</span> <span class="fn">Promise</span>(r => <span class="fn">setTimeout</span>(r, ms)); }
+<span class="kw">function</span> <span class="fn">rand</span>(min, max) { <span class="kw">return</span> Math.<span class="fn">floor</span>(Math.<span class="fn">random</span>() * (max - min + <span class="num">1</span>)) + min; }
+
+<span class="kw">function</span> <span class="fn">loadProgress</span>() {
+  <span class="kw">if</span> (fs.<span class="fn">existsSync</span>(<span class="cn">PROGRESS_FILE</span>))
+    <span class="kw">return</span> JSON.<span class="fn">parse</span>(fs.<span class="fn">readFileSync</span>(<span class="cn">PROGRESS_FILE</span>, <span class="str">'utf8'</span>));
+  <span class="kw">return</span> { done: [], failed: [] };
+}
+<span class="kw">function</span> <span class="fn">saveProgress</span>(p) {
+  fs.<span class="fn">writeFileSync</span>(<span class="cn">PROGRESS_FILE</span>, JSON.<span class="fn">stringify</span>(p, <span class="kw">null</span>, <span class="num">2</span>));
+}
+
+<span class="kw">const</span> likes   = JSON.<span class="fn">parse</span>(fs.<span class="fn">readFileSync</span>(<span class="cn">LIKES_FILE</span>, <span class="str">'utf8'</span>));
+<span class="kw">const</span> allUrls = likes
+  .<span class="fn">flatMap</span>(item => item.label_values || [])
+  .<span class="fn">filter</span>(lv => lv.label === <span class="str">'URL'</span> && lv.href)
+  .<span class="fn">map</span>(lv => lv.href);
+
+<span class="kw">const</span> progress = <span class="fn">loadProgress</span>();
+<span class="kw">const</span> pending  = allUrls
+  .<span class="fn">filter</span>(u => !progress.done.<span class="fn">includes</span>(u) && !progress.failed.<span class="fn">includes</span>(u))
+  .<span class="fn">slice</span>(<span class="num">0</span>, <span class="cn">LIMIT</span>);
+
+console.<span class="fn">log</span>(<span class="str">`\nTotal en JSON:    ${allUrls.length}`</span>);
+console.<span class="fn">log</span>(<span class="str">`Ya procesados:    ${progress.done.length}`</span>);
+console.<span class="fn">log</span>(<span class="str">`Esta sesión:      ${pending.length}`</span>);
+console.<span class="fn">log</span>(<span class="str">`Pendientes total: ${allUrls.length - progress.done.length - progress.failed.length}\n`</span>);
+
+(<span class="kw">async</span> () => {
+  <span class="kw">const</span> browser = <span class="kw">await</span> chromium.<span class="fn">launch</span>({
+    headless: <span class="kw">false</span>,
+    args: [<span class="str">'--disable-blink-features=AutomationControlled'</span>]
+  });
+  <span class="kw">const</span> context = <span class="kw">await</span> browser.<span class="fn">newContext</span>({
+    storageState: <span class="cn">SESSION_FILE</span>,
+    userAgent: <span class="str">'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'</span>,
+    viewport: { width: <span class="num">1280</span>, height: <span class="num">800</span> },
+    locale: <span class="str">'es-AR'</span>,
+  });
+  <span class="kw">const</span> page = <span class="kw">await</span> context.<span class="fn">newPage</span>();
+
+  <span class="kw">await</span> page.<span class="fn">addInitScript</span>(() => {
+    Object.<span class="fn">defineProperty</span>(navigator, <span class="str">'webdriver'</span>, { get: () => <span class="kw">undefined</span> });
+  });
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < pending.length; i++) {
+    <span class="kw">const</span> url = pending[i];
+    console.<span class="fn">log</span>(<span class="str">`\n[${i + 1}/${pending.length}] ${url}`</span>);
+
+    <span class="kw">try</span> {
+      <span class="kw">let</span> loaded = <span class="kw">false</span>;
+      <span class="kw">for</span> (<span class="kw">let</span> attempt = <span class="num">0</span>; attempt < <span class="num">3</span>; attempt++) {
+        <span class="kw">try</span> {
+          <span class="kw">await</span> page.<span class="fn">goto</span>(url, { waitUntil: <span class="str">'domcontentloaded'</span>, timeout: <span class="num">20000</span> });
+          loaded = <span class="kw">true</span>;
+          <span class="kw">break</span>;
+        } <span class="kw">catch</span> {
+          console.<span class="fn">log</span>(<span class="str">`  Reintentando (${attempt + 1}/3)...`</span>);
+          <span class="kw">await</span> <span class="fn">sleep</span>(<span class="num">3000</span>);
+        }
+      }
+      <span class="kw">if</span> (!loaded) {
+        progress.failed.<span class="fn">push</span>(url);
+        console.<span class="fn">log</span>(<span class="str">`  ✗ No se pudo cargar`</span>);
+        <span class="fn">saveProgress</span>(progress);
+        <span class="kw">continue</span>;
+      }
+
+      <span class="kw">try</span> {
+        <span class="kw">await</span> page.<span class="fn">waitForSelector</span>(
+          <span class="str">'svg[aria-label="Ya no me gusta"], svg[aria-label="Unlike"]'</span>,
+          { timeout: <span class="num">8000</span> }
+        );
+      } <span class="kw">catch</span> {}
+
+      <span class="kw">await</span> <span class="fn">sleep</span>(<span class="fn">rand</span>(<span class="num">1500</span>, <span class="num">2500</span>));
+      <span class="kw">await</span> page.mouse.<span class="fn">move</span>(<span class="fn">rand</span>(<span class="num">300</span>, <span class="num">700</span>), <span class="fn">rand</span>(<span class="num">200</span>, <span class="num">500</span>));
+      <span class="kw">await</span> <span class="fn">sleep</span>(<span class="fn">rand</span>(<span class="num">200</span>, <span class="num">500</span>));
+      <span class="kw">await</span> page.mouse.<span class="fn">move</span>(<span class="fn">rand</span>(<span class="num">400</span>, <span class="num">600</span>), <span class="fn">rand</span>(<span class="num">300</span>, <span class="num">450</span>));
+      <span class="kw">await</span> <span class="fn">sleep</span>(<span class="fn">rand</span>(<span class="num">100</span>, <span class="num">300</span>));
+
+      <span class="kw">const</span> likedBtn = page.<span class="fn">locator</span>(
+        <span class="str">'svg[aria-label="Ya no me gusta"], svg[aria-label="Unlike"]'</span>
+      ).<span class="fn">first</span>();
+
+      <span class="kw">if</span> (<span class="kw">await</span> likedBtn.<span class="fn">count</span>() > <span class="num">0</span>) {
+        <span class="kw">await</span> likedBtn.<span class="fn">click</span>();
+        progress.done.<span class="fn">push</span>(url);
+        console.<span class="fn">log</span>(<span class="str">`  ✓ Unlike OK`</span>);
+      } <span class="kw">else</span> {
+        console.<span class="fn">log</span>(<span class="str">`  - Corazón no encontrado, queda pendiente`</span>);
+      }
+
+    } <span class="kw">catch</span> (e) {
+      progress.failed.<span class="fn">push</span>(url);
+      console.<span class="fn">log</span>(<span class="str">`  ✗ Error: ${e.message}`</span>);
+    }
+
+    <span class="fn">saveProgress</span>(progress);
+
+    <span class="kw">if</span> (i < pending.length - <span class="num">1</span>) {
+      <span class="kw">const</span> wait = <span class="fn">rand</span>(<span class="cn">MIN_WAIT</span>, <span class="cn">MAX_WAIT</span>);
+      console.<span class="fn">log</span>(<span class="str">`  Esperando ${(wait / 1000).toFixed(1)}s...`</span>);
+      <span class="kw">await</span> <span class="fn">sleep</span>(wait);
+    }
+  }
+
+  console.<span class="fn">log</span>(<span class="str">`\n✓ Sesión terminada.`</span>);
+  console.<span class="fn">log</span>(<span class="str">`Procesados hoy: ${pending.length} | Acumulado: ${progress.done.length} | Fallos: ${progress.failed.length}`</span>);
+  <span class="kw">await</span> browser.<span class="fn">close</span>();
+})();</pre>
+  </div>
+
+  <div class="cmd-block"><span class="p">❯</span><span class="c">node unlike.js <span class="a">10</span></span><span class="cm2">// prueba inicial</span></div>
+  <div class="cmd-block"><span class="p">❯</span><span class="c">node unlike.js <span class="a">500</span></span><span class="cm2">// sesión nocturna</span></div>
+  <div class="cmd-block"><span class="p">❯</span><span class="c">node unlike.js <span class="a">2000</span></span><span class="cm2">// fin de semana</span></div>
+
+  <br>
+  <div class="features">
+    <div class="feat"><div class="feat-tag">ANTI-BOT</div><div class="feat-title">Pausas aleatorias</div><div class="feat-desc">8 a 20 segundos entre cada unlike. Sin patrón fijo detectable por Instagram.</div></div>
+    <div class="feat"><div class="feat-tag">CHECKPOINT</div><div class="feat-title">Progreso incremental</div><div class="feat-desc">Guarda cada URL procesada al instante. Si cortás el script, retoma solo.</div></div>
+    <div class="feat"><div class="feat-tag">RETRY</div><div class="feat-title">Reintentos automáticos</div><div class="feat-desc">Si una página no carga, reintenta 3 veces antes de saltear y seguir.</div></div>
+    <div class="feat"><div class="feat-tag">STEALTH</div><div class="feat-title">Anti-detección</div><div class="feat-desc">webdriver oculto, user agent real de Chrome, movimientos de mouse simulados.</div></div>
+  </div>
+
+  <div class="warning">
+    <strong>Nota sobre idioma:</strong> el aria-label del botón varía según el idioma de tu cuenta. En español es <span class="ic">"Ya no me gusta"</span>, en inglés <span class="ic">"Unlike"</span>. El script maneja ambos. Si usás otro idioma, inspeccioná el corazón con DevTools (F12) y ajustá el selector en las dos líneas donde aparece.
+  </div>
+</section></div>
+
+<div class="wrap">
+  <footer>
+    <div class="footer-l"><div class="logo-dot"></div>ig-unlike · <span>open source</span></div>
+    <div class="footer-r">Node.js · Playwright · 2026</div>
+  </footer>
+</div>
+
+</body>
+</html>
