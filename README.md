@@ -1,3 +1,5 @@
+![banner](docs/unlike.png)
+
 # instagram-unlike
 
 Clean your Instagram likes history using your official exported data.
