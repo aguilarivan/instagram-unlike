@@ -5,7 +5,8 @@
   "main": "unlike.js",
   "scripts": {
     "start": "node unlike.js",
-    "session": "node save_session.js"
+    "session": "node save_session.js",
+    "stats": "node stats.js"
   },
   "keywords": [
     "instagram",

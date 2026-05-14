@@ -213,15 +213,114 @@ npx playwright install chromium</pre>
 </section></div>
 
 <!-- 01 EXPORT -->
+<!-- 01 EXPORT -->
 <div class="wrap"><section>
   <div class="sec-label">01 — export</div>
+
   <h2>Exportá tus datos</h2>
-  <p class="sec-desc">Instagram permite descargar todo tu historial. Necesitás el archivo <span class="ic">liked_posts.json</span> en formato JSON.</p>
+
+  <p class="sec-desc">
+    Instagram permite descargar tu historial completo de likes.
+    El script necesita únicamente el archivo
+    <span class="ic">liked_posts.json</span>
+    en formato JSON.
+  </p>
+
   <div class="step-list">
-    <div class="step"><div class="step-n">01</div><div class="step-body"><div class="step-title">Ir a Accounts Center</div><div class="step-desc">Perfil → Menú (☰) → Accounts Center → Tu información y permisos → Descargar tu información</div></div></div>
-    <div class="step"><div class="step-n">02</div><div class="step-body"><div class="step-title">Elegir formato JSON</div><div class="step-desc">Crítico: seleccionar JSON, no HTML. El HTML no es parseable por el script.</div></div></div>
-    <div class="step"><div class="step-n">03</div><div class="step-body"><div class="step-title">Esperar el email</div><div class="step-desc">Instagram procesa el export en minutos o hasta 48hs. Descargás un ZIP con todos los JSONs.</div></div></div>
-    <div class="step"><div class="step-n">04</div><div class="step-body"><div class="step-title">Extraer liked_posts.json</div><div class="step-desc">Descomprimí el ZIP y buscá el archivo en <span class="ic">your_instagram_activity/likes/</span></div></div></div>
+
+    <div class="step">
+      <div class="step-n">01</div>
+
+      <div class="step-body">
+        <div class="step-title">Crear el export</div>
+
+        <div class="step-desc">
+          Ir a Instagram →
+          Perfil →
+          Menú (☰) →
+          <a class="inline-link" href="https://accountscenter.instagram.com/info_and_permissions/" target="_blank" rel="noopener noreferrer">
+            Accounts Center
+          </a>
+          →
+          <span class="ic">Your information and permissions</span>
+          →
+          <span class="ic">Download your information</span>
+          →
+          <span class="ic">Create export</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">02</div>
+
+      <div class="step-body">
+        <div class="step-title">Seleccionar “Export to device”</div>
+
+        <div class="step-desc">
+          Elegí exportar los datos directamente a tu dispositivo,
+          no a un servicio externo.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">03</div>
+
+      <div class="step-body">
+        <div class="step-title">Exportar únicamente Likes</div>
+
+        <div class="step-desc">
+          En
+          <span class="ic">Customize information</span>,
+          destildá todo y dejá solamente
+          <span class="ic">Likes</span>.
+          Esto hace que el export sea mucho más rápido y liviano.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">04</div>
+
+      <div class="step-body">
+        <div class="step-title">Elegir formato JSON</div>
+
+        <div class="step-desc">
+          Seleccioná
+          <span class="ic">JSON</span>,
+          no HTML.
+          El script no puede parsear exports HTML.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">05</div>
+
+      <div class="step-body">
+        <div class="step-title">Esperar el email</div>
+
+        <div class="step-desc">
+          Instagram procesa el export en minutos o hasta 48hs.
+          Después descargás un ZIP con tus datos.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-n">06</div>
+
+      <div class="step-body">
+        <div class="step-title">Extraer liked_posts.json</div>
+
+        <div class="step-desc">
+          Descomprimí el ZIP y buscá:
+          <span class="ic">your_instagram_activity/likes/liked_posts.json</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section></div>
 
